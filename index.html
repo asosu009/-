@@ -3,92 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ポケカ最速検索 Pro</title>
+    <title>ポケカ最速検索</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 20px; background: #121212; color: white; text-align: center; }
         .container { max-width: 400px; margin: 0 auto; }
-        
-        /* 入力エリア：1つに統合 */
-        .input-wrapper {
-            position: relative;
-            display: inline-block;
-            width: 100%;
-            margin-bottom: 20px;
-        }
+        .input-group { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        /* 入力欄：数字キーボードが出るように設定 */
         input { 
-            width: 100%; padding: 20px; font-size: 32px; font-weight: bold; 
+            width: 120px; padding: 15px 5px; font-size: 32px; font-weight: bold; 
             border-radius: 12px; border: 2px solid #444; background: #000; 
             color: #00ff00; text-align: center; box-sizing: border-box;
-            letter-spacing: 2px;
         }
-        /* スラッシュを最初から表示するためのヒント */
-        input::placeholder { color: #333; }
-
+        .separator { font-size: 40px; font-weight: bold; color: #777; }
         .btn-group { display: grid; gap: 12px; }
-        .btn { 
-            padding: 20px; font-size: 20px; font-weight: bold; color: white; 
-            text-decoration: none; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-        }
+        .btn { padding: 20px; font-size: 20px; font-weight: bold; color: white; text-decoration: none; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
         .mercari { background: #ff0021; }
         .snkrdunk { background: #000; border: 1px solid #666; }
         .ebay { background: #0064d2; }
-        
         .reset-btn { margin-top: 30px; padding: 15px; font-size: 14px; color: #777; background: none; border: 1px solid #333; border-radius: 8px; width: 100%; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2 style="font-size:16px; color:#aaa;">番号を入力（スラッシュ前後を打つだけ）</h2>
+        <h2 style="font-size:16px; color:#aaa;">番号を入力</h2>
         
-        <div class="input-wrapper">
-            <input type="text" id="cardNumber" value="/" autofocus>
+        <div class="input-group">
+            <input type="text" id="left" placeholder="021" inputmode="numeric">
+            <span class="separator">/</span>
+            <input type="text" id="right" placeholder="025" inputmode="numeric">
         </div>
 
         <div class="btn-group">
-            <a id="link-mercari" href="#" class="btn mercari" target="_blank">メルカリ（売切）</a>
-            <a id="link-snkrdunk" href="#" class="btn snkrdunk" target="_blank">スニダン</a>
-            <a id="link-ebay" href="#" class="btn ebay" target="_blank">eBay（Sold）</a>
+            <a id="l-mercari" href="#" class="btn mercari" target="_blank">メルカリ（売り切れ）</a>
+            <a id="l-snkrdunk" href="#" class="btn snkrdunk" target="_blank">スニダン</a>
+            <a id="l-ebay" href="#" class="btn ebay" target="_blank">eBay（Sold）</a>
         </div>
 
-        <button class="reset-btn" onclick="resetAll()">すべてクリア</button>
+        <button class="reset-btn" onclick="resetAll()">クリア</button>
     </div>
 
     <script>
-        const input = document.getElementById('cardNumber');
-        const mLink = document.getElementById('link-mercari');
-        const sLink = document.getElementById('link-snkrdunk');
-        const eLink = document.getElementById('link-ebay');
+        const left = document.getElementById('left');
+        const right = document.getElementById('right');
+        const m = document.getElementById('l-mercari');
+        const s = document.getElementById('l-snkrdunk');
+        const e = document.getElementById('l-ebay');
 
-        // ページ読み込み時にカーソルをスラッシュの前に置く
-        window.onload = () => {
-            input.setSelectionRange(0, 0);
-        };
-
-        function updateLinks() {
-            const val = input.value.trim();
-            // スラッシュが含まれていて、かつ前後に文字がある場合のみリンク生成
-            if (val.includes('/') && val.length > 1) {
-                const query = encodeURIComponent(val + " PSA10");
-                mLink.href = `https://jp.mercari.com/search?keyword=${query}&status=sold_out`;
-                sLink.href = `https://snkrdunk.com/v1/trading-cards/search?keyword=${query}`;
-                eLink.href = `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&LH_Complete=1`;
+        function update() {
+            const val = left.value + "/" + right.value;
+            if (left.value && right.value) {
+                const q = encodeURIComponent(val + " PSA10");
+                m.href = `https://jp.mercari.com/search?keyword=${q}&status=sold_out`;
+                s.href = `https://snkrdunk.com/v1/trading-cards/search?keyword=${q}`;
+                e.href = `https://www.ebay.com/sch/i.html?_nkw=${q}&LH_Sold=1&LH_Complete=1`;
             }
         }
+
+        // 3桁打ったら自動で右へ移動
+        left.addEventListener('input', () => {
+            update();
+            if (left.value.length >= 3) right.focus();
+        });
+        right.addEventListener('input', update);
 
         function resetAll() {
-            input.value = "/";
-            input.focus();
-            input.setSelectionRange(0, 0);
+            left.value = ""; right.value = "";
+            left.focus();
         }
-
-        input.addEventListener('input', updateLinks);
-
-        // スラッシュを消さないように制御
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace' && input.value === '/') {
-                e.preventDefault();
-            }
-        });
     </script>
 </body>
 </html>
