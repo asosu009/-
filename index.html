@@ -17,7 +17,8 @@
         .btn-group { display: grid; gap: 12px; }
         .btn { 
             padding: 20px; font-size: 20px; font-weight: bold; color: white; 
-            border: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            border: none; border-radius: 12px; cursor: pointer; text-decoration: none;
+            display: flex; align-items: center; justify-content: center;
         }
         .mercari { background: #ef4444; }
         .snkrdunk { background: #1e293b; border: 1px solid #475569; }
@@ -29,57 +30,50 @@
     <div class="container">
         <h2 style="font-size:18px; margin-bottom:20px;">カード番号を入力</h2>
         <div class="input-group">
-            <input type="text" id="left" placeholder="000" inputmode="numeric" autofocus>
+            <input type="text" id="left" placeholder="021" inputmode="numeric" autofocus>
             <span class="separator">/</span>
-            <input type="text" id="right" placeholder="000" inputmode="numeric">
+            <input type="text" id="right" placeholder="025" inputmode="numeric">
         </div>
 
         <div class="btn-group">
-            <button onclick="search('m')" class="btn mercari">メルカリ（売切）</button>
-            <button onclick="search('s')" class="btn snkrdunk">スニダン</button>
-            <button onclick="search('e')" class="btn ebay">eBay（Sold）</button>
+            <button onclick="goSearch('m')" class="btn mercari">メルカリ（売切）</button>
+            <button onclick="goSearch('s')" class="btn snkrdunk">スニダン</button>
+            <button onclick="goSearch('e')" class="btn ebay">eBay（Sold）</button>
         </div>
 
         <button class="reset-btn" onclick="location.reload(true)">リセット</button>
     </div>
 
     <script>
-        const left = document.getElementById('left');
-        const right = document.getElementById('right');
-
-        function search(type) {
-            const lVal = left.value.trim();
-            const rVal = right.value.trim();
+        function goSearch(type) {
+            const l = document.getElementById('left').value.trim();
+            const r = document.getElementById('right').value.trim();
             
-            if (!lVal || !rVal) {
-                alert("番号を両方入力してください");
+            if (!l || !r) {
+                alert("番号を入力してください");
                 return;
             }
 
-            const cardNum = `${lVal}/${rVal}`;
-            const psaQuery = encodeURIComponent(`${cardNum} PSA10`);
-            const snkrQuery = encodeURIComponent(cardNum);
-
+            const num = l + "/" + r;
             let url = "";
+
             if (type === 'm') {
-                url = `https://jp.mercari.com/search?keyword=${psaQuery}&status=sold_out`;
+                url = "https://jp.mercari.com/search?keyword=" + encodeURIComponent(num + " PSA10") + "&status=sold_out";
             } else if (type === 's') {
-                url = `https://snkrdunk.com/search?keyword=${snkrQuery}`;
+                // スニダンの検索URLを最も直接的な形に固定
+                url = "https://snkrdunk.com/search?keyword=" + encodeURIComponent(num);
             } else if (type === 'e') {
-                url = `https://www.ebay.com/sch/i.html?_nkw=${psaQuery}&LH_Sold=1&LH_Complete=1`;
+                url = "https://www.ebay.com/sch/i.html?_nkw=" + encodeURIComponent(num + " PSA10") + "&LH_Sold=1&LH_Complete=1";
             }
-            
-            window.open(url, '_blank');
+
+            // 確実に新しいウィンドウで開く
+            window.location.href = url;
         }
 
-        left.addEventListener('input', () => {
-            if (left.value.length >= 3) right.focus();
+        // 入力補助：左側が3桁になったら右へ
+        document.getElementById('left').addEventListener('input', function() {
+            if (this.value.length >= 3) document.getElementById('right').focus();
         });
-
-        window.onload = () => {
-            left.value = "";
-            right.value = "";
-        };
     </script>
 </body>
 </html>
