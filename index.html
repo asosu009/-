@@ -2,53 +2,95 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ポケカ相場スキャナー</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ポケカ相場スキャナー Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 20px; text-align: center; background: #f4f4f4; }
-        #video { width: 100%; max-width: 400px; border-radius: 15px; border: 3px solid #333; margin-bottom: 10px; }
-        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 18px; font-weight: bold; text-align: center; color: white; text-decoration: none; border-radius: 12px; }
+        body { font-family: sans-serif; margin: 0; padding: 20px; text-align: center; background: #1a1a1a; color: white; }
+        #video-container { position: relative; width: 100%; max-width: 400px; margin: 0 auto 10px; overflow: hidden; border-radius: 15px; border: 2px solid #444; }
+        #video { width: 100%; display: block; }
+        /* フォーカスを助けるガイド枠 */
+        #guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 40px; border: 2px dashed #00ff00; pointer-events: none; }
+        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 18px; font-weight: bold; text-align: center; color: white; text-decoration: none; border-radius: 12px; transition: 0.2s; }
         .mercari { background: #ff0021; }
-        .snkrdunk { background: #000000; }
+        .snkrdunk { background: #000000; border: 1px solid #444; }
         .ebay { background: #0064d2; }
-        #status { color: #666; margin: 10px 0; }
-        #result-display { font-size: 20px; font-weight: bold; color: #333; background: white; padding: 10px; border-radius: 8px; }
+        #status { color: #aaa; font-size: 14px; margin: 5px 0; }
+        #result-box { background: #333; padding: 15px; border-radius: 10px; margin-top: 10px; }
+        #result-display { font-size: 22px; font-weight: bold; color: #00ff00; }
     </style>
 </head>
 <body>
-    <h2>ポケカ相場スキャナー</h2>
-    <video id="video" autoplay playsinline></video>
-    <div id="status">カメラ準備中...</div>
-    <div id="result-display">番号を探しています...</div>
-    <div id="links" style="display:none;">
-        <p>↓ 各サイトのPSA10相場を表示 ↓</p>
-        <a id="link-mercari" class="btn mercari" target="_blank">メルカリ(売切)</a>
-        <a id="link-snkrdunk" class="btn snkrdunk" target="_blank">スニダン</a>
-        <a id="link-ebay" class="btn ebay" target="_blank">eBay(Sold)</a>
+    <h3>ポケカ相場スキャナー</h3>
+    <div id="video-container">
+        <video id="video" autoplay playsinline></video>
+        <div id="guide"></div>
     </div>
+    <div id="status">カメラ起動中...</div>
+
+    <div id="result-box">
+        <div id="result-display">番号を枠に合わせてください</div>
+        <div id="links" style="display:none; margin-top:15px;">
+            <a id="link-mercari" class="btn mercari" target="_blank">メルカリ(売切)</a>
+            <a id="link-snkrdunk" class="btn snkrdunk" target="_blank">スニダン</a>
+            <a id="link-ebay" class="btn ebay" target="_blank">eBay(Sold)</a>
+        </div>
+    </div>
+
     <script>
         const video = document.getElementById('video');
         const status = document.getElementById('status');
         const resultDisplay = document.getElementById('result-display');
         const links = document.getElementById('links');
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-            .then(stream => { video.srcObject = stream; status.innerText = "スキャン中..."; startScanning(); });
+
+        // 高画質(HD)設定と背面カメラの強制指定
+        const constraints = {
+            video: {
+                facingMode: "environment",
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                focusMode: "continuous"
+            }
+        };
+
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(stream => {
+                video.srcObject = stream;
+                status.innerText = "スキャン中: 15cmほど離すと合いやすいです";
+                startScanning();
+            })
+            .catch(err => {
+                status.innerText = "エラー: カメラを許可してください";
+            });
+
         function startScanning() {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
+
+            // 認識の間隔を少し空けてスマホの負荷を減らす
             setInterval(async () => {
-                canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
-                const match = text.match(/\d{3}\/\d{3}/);
-                if (match) {
-                    const cardNumber = match[0];
-                    resultDisplay.innerText = "認識成功: " + cardNumber;
-                    updateLinks(cardNumber);
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    // 文字認識実行
+                    const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
+                    
+                    // 「数字3桁/数字3桁」を抽出
+                    const match = text.match(/\d{3}\/\d{3}/);
+                    if (match) {
+                        const cardNumber = match[0];
+                        resultDisplay.innerText = "認識成功: " + cardNumber;
+                        updateLinks(cardNumber);
+                        
+                        // 成功時に少し振動させる（Androidのみ）
+                        if (navigator.vibrate) navigator.vibrate(50);
+                    }
                 }
-            }, 2500);
+            }, 2000);
         }
+
         function updateLinks(num) {
             const query = encodeURIComponent(num + " PSA10");
             document.getElementById('link-mercari').href = `https://jp.mercari.com/search?keyword=${query}&status=sold_out`;
