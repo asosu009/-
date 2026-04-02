@@ -24,7 +24,7 @@
 </head>
 <body>
     <div class="container">
-        <h2 style="font-size:18px; margin-bottom:20px;">番号を入力（左右に分けて打つだけ）</h2>
+        <h2 style="font-size:18px; margin-bottom:20px;">番号を入力</h2>
         
         <div class="input-group">
             <input type="text" id="left" placeholder="021" inputmode="numeric" autofocus>
@@ -52,17 +52,19 @@
             const lVal = left.value.trim();
             const rVal = right.value.trim();
             if (lVal && rVal) {
-                // 自動でスラッシュを挟んで検索ワードを作成
-                const query = encodeURIComponent(`${lVal}/${rVal} PSA10`);
+                const cardNum = `${lVal}/${rVal}`;
+                const query = encodeURIComponent(cardNum + " PSA10");
+                
+                // 各プラットフォームのリンク生成
                 m.href = `https://jp.mercari.com/search?keyword=${query}&status=sold_out`;
-                s.href = `https://snkrdunk.com/v1/trading-cards/search?keyword=${query}`;
+                // スニダンのURL形式を修正
+                s.href = `https://snkrdunk.com/search?keyword=${query}`;
                 e.href = `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&LH_Complete=1`;
             }
         }
 
         left.addEventListener('input', () => {
             updateLinks();
-            // 左に3文字入ったら自動で右へ移動（数字入力時のみ便利）
             if (left.value.length >= 3) right.focus();
         });
         right.addEventListener('input', updateLinks);
