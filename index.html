@@ -3,33 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ポケカ相場スキャナー Pro</title>
+    <title>ポケカ相場スキャナー Zoom版</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 20px; text-align: center; background: #1a1a1a; color: white; }
         #video-container { position: relative; width: 100%; max-width: 400px; margin: 0 auto 10px; overflow: hidden; border-radius: 15px; border: 2px solid #444; }
-        #video { width: 100%; display: block; }
-        /* フォーカスを助けるガイド枠 */
-        #guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 40px; border: 2px dashed #00ff00; pointer-events: none; }
-        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 18px; font-weight: bold; text-align: center; color: white; text-decoration: none; border-radius: 12px; transition: 0.2s; }
+        #video { width: 100%; display: block; transform: scale(1.5); transform-origin: center; } /* 1.5倍ズーム */
+        #guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 50px; border: 3px solid #00ff00; border-radius: 8px; pointer-events: none; box-shadow: 0 0 15px rgba(0,255,0,0.5); }
+        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 18px; font-weight: bold; text-align: center; color: white; text-decoration: none; border-radius: 12px; }
         .mercari { background: #ff0021; }
         .snkrdunk { background: #000000; border: 1px solid #444; }
         .ebay { background: #0064d2; }
-        #status { color: #aaa; font-size: 14px; margin: 5px 0; }
         #result-box { background: #333; padding: 15px; border-radius: 10px; margin-top: 10px; }
         #result-display { font-size: 22px; font-weight: bold; color: #00ff00; }
+        .hint { font-size: 14px; color: #ffcc00; margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <h3>ポケカ相場スキャナー</h3>
+    <div class="hint">【コツ】20cmくらい離すとピントが合います！</div>
     <div id="video-container">
         <video id="video" autoplay playsinline></video>
         <div id="guide"></div>
     </div>
-    <div id="status">カメラ起動中...</div>
 
     <div id="result-box">
-        <div id="result-display">番号を枠に合わせてください</div>
+        <div id="result-display">緑の枠に番号を合わせる</div>
         <div id="links" style="display:none; margin-top:15px;">
             <a id="link-mercari" class="btn mercari" target="_blank">メルカリ(売切)</a>
             <a id="link-snkrdunk" class="btn snkrdunk" target="_blank">スニダン</a>
@@ -39,56 +38,42 @@
 
     <script>
         const video = document.getElementById('video');
-        const status = document.getElementById('status');
         const resultDisplay = document.getElementById('result-display');
         const links = document.getElementById('links');
 
-        // 高画質(HD)設定と背面カメラの強制指定
-        const constraints = {
-            video: {
+        navigator.mediaDevices.getUserMedia({ 
+            video: { 
                 facingMode: "environment",
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                focusMode: "continuous"
-            }
-        };
-
-        navigator.mediaDevices.getUserMedia(constraints)
-            .then(stream => {
-                video.srcObject = stream;
-                status.innerText = "スキャン中: 15cmほど離すと合いやすいです";
-                startScanning();
-            })
-            .catch(err => {
-                status.innerText = "エラー: カメラを許可してください";
-            });
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+            } 
+        })
+        .then(stream => { video.srcObject = stream; startScanning(); });
 
         function startScanning() {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
 
-            // 認識の間隔を少し空けてスマホの負荷を減らす
             setInterval(async () => {
                 if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    // ズームされている中央部分だけを切り取って認識させる
+                    canvas.width = 600;
+                    canvas.height = 300;
+                    const startX = (video.videoWidth - 600) / 2;
+                    const startY = (video.videoHeight - 300) / 2;
                     
-                    // 文字認識実行
+                    context.drawImage(video, startX, startY, 600, 300, 0, 0, 600, 300);
+                    
                     const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
-                    
-                    // 「数字3桁/数字3桁」を抽出
                     const match = text.match(/\d{3}\/\d{3}/);
                     if (match) {
                         const cardNumber = match[0];
                         resultDisplay.innerText = "認識成功: " + cardNumber;
                         updateLinks(cardNumber);
-                        
-                        // 成功時に少し振動させる（Androidのみ）
-                        if (navigator.vibrate) navigator.vibrate(50);
+                        if (navigator.vibrate) navigator.vibrate(70);
                     }
                 }
-            }, 2000);
+            }, 1500);
         }
 
         function updateLinks(num) {
