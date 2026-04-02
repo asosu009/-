@@ -7,7 +7,6 @@
     <style>
         body { font-family: sans-serif; margin: 0; padding: 20px; background: #0f172a; color: white; text-align: center; }
         .container { max-width: 400px; margin: 0 auto; }
-        
         .input-group { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 25px; }
         input { 
             width: 125px; padding: 15px 5px; font-size: 32px; font-weight: bold; 
@@ -15,27 +14,20 @@
             color: #22c55e; text-align: center; box-sizing: border-box;
         }
         .separator { font-size: 40px; font-weight: bold; color: #475569; }
-
         .btn-group { display: grid; gap: 12px; }
         .btn { 
             padding: 20px; font-size: 20px; font-weight: bold; color: white; 
-            text-decoration: none; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            border: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
-        
         .mercari { background: #ef4444; }
         .snkrdunk { background: #1e293b; border: 1px solid #475569; }
         .ebay { background: #3b82f6; }
-        
-        .reset-btn { 
-            margin-top: 30px; padding: 15px; font-size: 14px; color: #64748b; 
-            background: none; border: 1px solid #334155; border-radius: 8px; width: 100%;
-        }
+        .reset-btn { margin-top: 30px; padding: 15px; font-size: 14px; color: #64748b; background: none; border: 1px solid #334155; border-radius: 8px; width: 100%; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2 style="font-size:18px; margin-bottom:20px;">カード番号を入力</h2>
-        
         <div class="input-group">
             <input type="text" id="left" placeholder="000" inputmode="numeric" autofocus>
             <span class="separator">/</span>
@@ -43,9 +35,9 @@
         </div>
 
         <div class="btn-group">
-            <a id="link-m" href="#" class="btn mercari" target="_blank">メルカリ（売切）</a>
-            <a id="link-s" href="#" class="btn snkrdunk" target="_blank">スニダン</a>
-            <a id="link-e" href="#" class="btn ebay" target="_blank">eBay（Sold）</a>
+            <button onclick="search('m')" class="btn mercari">メルカリ（売切）</button>
+            <button onclick="search('s')" class="btn snkrdunk">スニダン</button>
+            <button onclick="search('e')" class="btn ebay">eBay（Sold）</button>
         </div>
 
         <button class="reset-btn" onclick="location.reload(true)">リセット</button>
@@ -54,35 +46,35 @@
     <script>
         const left = document.getElementById('left');
         const right = document.getElementById('right');
-        const m = document.getElementById('link-m');
-        const s = document.getElementById('link-s');
-        const e = document.getElementById('link-e');
 
-        function updateLinks() {
+        function search(type) {
             const lVal = left.value.trim();
             const rVal = right.value.trim();
             
-            if (lVal && rVal) {
-                const cardNum = `${lVal}/${rVal}`;
-                
-                // メルカリ・eBayは「PSA10」付きで検索
-                const psaQuery = encodeURIComponent(`${cardNum} PSA10`);
-                
-                // スニダンのみ「番号/番号」だけで検索
-                const snkrQuery = encodeURIComponent(cardNum);
-
-                m.href = `https://jp.mercari.com/search?keyword=${psaQuery}&status=sold_out`;
-                s.href = `https://snkrdunk.com/search?keyword=${snkrQuery}`;
-                e.href = `https://www.ebay.com/sch/i.html?_nkw=${psaQuery}&LH_Sold=1&LH_Complete=1`;
+            if (!lVal || !rVal) {
+                alert("番号を両方入力してください");
+                return;
             }
+
+            const cardNum = `${lVal}/${rVal}`;
+            const psaQuery = encodeURIComponent(`${cardNum} PSA10`);
+            const snkrQuery = encodeURIComponent(cardNum);
+
+            let url = "";
+            if (type === 'm') {
+                url = `https://jp.mercari.com/search?keyword=${psaQuery}&status=sold_out`;
+            } else if (type === 's') {
+                url = `https://snkrdunk.com/search?keyword=${snkrQuery}`;
+            } else if (type === 'e') {
+                url = `https://www.ebay.com/sch/i.html?_nkw=${psaQuery}&LH_Sold=1&LH_Complete=1`;
+            }
+            
+            window.open(url, '_blank');
         }
 
         left.addEventListener('input', () => {
-            updateLinks();
             if (left.value.length >= 3) right.focus();
         });
-        
-        right.addEventListener('input', updateLinks);
 
         window.onload = () => {
             left.value = "";
