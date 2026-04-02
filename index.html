@@ -7,17 +7,22 @@
     <style>
         body { font-family: sans-serif; margin: 0; padding: 20px; background: #121212; color: white; text-align: center; }
         .container { max-width: 400px; margin: 0 auto; }
-        .mode-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
-        .mode-btn { padding: 8px 15px; font-size: 14px; border-radius: 20px; border: 1px solid #555; background: #333; color: #ccc; cursor: pointer; }
-        .mode-btn.active { background: #00ff00; color: black; border-color: #00ff00; font-weight: bold; }
         
-        .input-group { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        /* 入力エリア：1つに統合 */
+        .input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 20px;
+        }
         input { 
-            width: 120px; padding: 15px 5px; font-size: 28px; font-weight: bold; 
+            width: 100%; padding: 20px; font-size: 32px; font-weight: bold; 
             border-radius: 12px; border: 2px solid #444; background: #000; 
             color: #00ff00; text-align: center; box-sizing: border-box;
+            letter-spacing: 2px;
         }
-        .separator { font-size: 40px; font-weight: bold; color: #777; }
+        /* スラッシュを最初から表示するためのヒント */
+        input::placeholder { color: #333; }
 
         .btn-group { display: grid; gap: 12px; }
         .btn { 
@@ -27,20 +32,16 @@
         .mercari { background: #ff0021; }
         .snkrdunk { background: #000; border: 1px solid #666; }
         .ebay { background: #0064d2; }
+        
         .reset-btn { margin-top: 30px; padding: 15px; font-size: 14px; color: #777; background: none; border: 1px solid #333; border-radius: 8px; width: 100%; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="mode-selector">
-            <div id="modeNum" class="mode-btn active" onclick="setMode('number')">数字入力</div>
-            <div id="modeText" class="mode-btn" onclick="setMode('text')">英数 (プロモ)</div>
-        </div>
+        <h2 style="font-size:16px; color:#aaa;">番号を入力（スラッシュ前後を打つだけ）</h2>
         
-        <div class="input-group">
-            <input type="number" id="numLeft" placeholder="000" inputmode="numeric">
-            <span class="separator">/</span>
-            <input type="number" id="numRight" placeholder="000" inputmode="numeric">
+        <div class="input-wrapper">
+            <input type="text" id="cardNumber" value="/" autofocus>
         </div>
 
         <div class="btn-group">
@@ -53,33 +54,21 @@
     </div>
 
     <script>
-        const left = document.getElementById('numLeft');
-        const right = document.getElementById('numRight');
+        const input = document.getElementById('cardNumber');
         const mLink = document.getElementById('link-mercari');
         const sLink = document.getElementById('link-snkrdunk');
         const eLink = document.getElementById('link-ebay');
-        const btnNum = document.getElementById('modeNum');
-        const btnText = document.getElementById('modeText');
 
-        // モード切替
-        function setMode(mode) {
-            if (mode === 'number') {
-                left.type = 'number'; left.inputMode = 'numeric';
-                right.type = 'number'; right.inputMode = 'numeric';
-                btnNum.classList.add('active'); btnText.classList.remove('active');
-            } else {
-                left.type = 'text'; left.inputMode = 'text';
-                right.type = 'text'; right.inputMode = 'text';
-                btnNum.classList.remove('active'); btnText.classList.add('active');
-            }
-            left.focus();
-        }
+        // ページ読み込み時にカーソルをスラッシュの前に置く
+        window.onload = () => {
+            input.setSelectionRange(0, 0);
+        };
 
         function updateLinks() {
-            const lVal = left.value.trim();
-            const rVal = right.value.trim();
-            if (lVal && rVal) {
-                const query = encodeURIComponent(`${lVal}/${rVal} PSA10`);
+            const val = input.value.trim();
+            // スラッシュが含まれていて、かつ前後に文字がある場合のみリンク生成
+            if (val.includes('/') && val.length > 1) {
+                const query = encodeURIComponent(val + " PSA10");
                 mLink.href = `https://jp.mercari.com/search?keyword=${query}&status=sold_out`;
                 sLink.href = `https://snkrdunk.com/v1/trading-cards/search?keyword=${query}`;
                 eLink.href = `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&LH_Complete=1`;
@@ -87,16 +76,18 @@
         }
 
         function resetAll() {
-            left.value = ""; right.value = "";
-            left.focus();
+            input.value = "/";
+            input.focus();
+            input.setSelectionRange(0, 0);
         }
 
-        left.addEventListener('input', updateLinks);
-        right.addEventListener('input', updateLinks);
-        
-        // 自動移動（数字モードの時のみ）
-        left.addEventListener('input', () => {
-            if (left.type === 'number' && left.value.length >= 3) right.focus();
+        input.addEventListener('input', updateLinks);
+
+        // スラッシュを消さないように制御
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && input.value === '/') {
+                e.preventDefault();
+            }
         });
     </script>
 </body>
