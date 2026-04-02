@@ -6,46 +6,30 @@
     <title>ポケカ最速検索</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 20px; background: #121212; color: white; text-align: center; }
-        .container { max-width: 400px; margin: 0 auto; }
-        h2 { font-size: 18px; color: #aaa; margin-bottom: 20px; }
-        
-        /* 入力欄：数字キーボードを出しやすく設定 */
         input { 
             width: 100%; padding: 20px; font-size: 32px; font-weight: bold; 
             border-radius: 12px; border: 2px solid #444; background: #000; 
             color: #00ff00; text-align: center; box-sizing: border-box;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
         }
-
-        .btn-group { display: grid; gap: 12px; margin-top: 10px; }
+        .btn-group { display: grid; gap: 15px; }
         .btn { 
             padding: 20px; font-size: 20px; font-weight: bold; color: white; 
-            text-decoration: none; border-radius: 12px; transition: 0.2s;
-            display: flex; align-items: center; justify-content: center;
+            text-decoration: none; border-radius: 12px;
         }
         .mercari { background: #ff0021; }
         .snkrdunk { background: #000; border: 1px solid #666; }
         .ebay { background: #0064d2; }
-        
-        .reset-btn { 
-            margin-top: 30px; padding: 10px; font-size: 14px; color: #777; 
-            background: none; border: 1px solid #333; border-radius: 8px; width: 100%;
-        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>番号を入力してください</h2>
-        
-        <input type="text" id="cardNumber" placeholder="071/066" autofocus>
+    <h2>番号を入力（例：071/066）</h2>
+    <input type="text" id="cardNumber" placeholder="000/000">
 
-        <div class="btn-group">
-            <a id="link-mercari" href="#" class="btn mercari" target="_blank">メルカリ（売り切れ）</a>
-            <a id="link-snkrdunk" href="#" class="btn snkrdunk" target="_blank">スニダン</a>
-            <a id="link-ebay" href="#" class="btn ebay" target="_blank">eBay（Sold）</a>
-        </div>
-
-        <button class="reset-btn" onclick="resetInput()">入力をクリア</button>
+    <div class="btn-group">
+        <a id="link-mercari" href="#" class="btn mercari" target="_blank">メルカリ（売り切れ）</a>
+        <a id="link-snkrdunk" href="#" class="btn snkrdunk" target="_blank">スニダン</a>
+        <a id="link-ebay" href="#" class="btn ebay" target="_blank">eBay（Sold）</a>
     </div>
 
     <script>
@@ -54,24 +38,15 @@
         const sLink = document.getElementById('link-snkrdunk');
         const eLink = document.getElementById('link-ebay');
 
-        function updateLinks() {
+        input.addEventListener('input', () => {
             const val = input.value.trim();
-            if (val.length >= 3) {
-                // 自動で「PSA10」を付けて検索
+            if (val) {
                 const query = encodeURIComponent(val + " PSA10");
                 mLink.href = `https://jp.mercari.com/search?keyword=${query}&status=sold_out`;
                 sLink.href = `https://snkrdunk.com/v1/trading-cards/search?keyword=${query}`;
                 eLink.href = `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&LH_Complete=1`;
             }
-        }
-
-        function resetInput() {
-            input.value = "";
-            input.focus();
-        }
-
-        // 入力のたびに即座に反映
-        input.addEventListener('input', updateLinks);
+        });
     </script>
 </body>
 </html>
