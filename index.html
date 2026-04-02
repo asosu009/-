@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ポケカ相場スキャナー</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 20px; text-align: center; background: #f4f4f4; }
+        #video { width: 100%; max-width: 400px; border-radius: 15px; border: 3px solid #333; margin-bottom: 10px; }
+        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 18px; font-weight: bold; text-align: center; color: white; text-decoration: none; border-radius: 12px; }
+        .mercari { background: #ff0021; }
+        .snkrdunk { background: #000000; }
+        .ebay { background: #0064d2; }
+        #status { color: #666; margin: 10px 0; }
+        #result-display { font-size: 20px; font-weight: bold; color: #333; background: white; padding: 10px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h2>ポケカ相場スキャナー</h2>
+    <video id="video" autoplay playsinline></video>
+    <div id="status">カメラ準備中...</div>
+    <div id="result-display">番号を探しています...</div>
+    <div id="links" style="display:none;">
+        <p>↓ 各サイトのPSA10相場を表示 ↓</p>
+        <a id="link-mercari" class="btn mercari" target="_blank">メルカリ(売切)</a>
+        <a id="link-snkrdunk" class="btn snkrdunk" target="_blank">スニダン</a>
+        <a id="link-ebay" class="btn ebay" target="_blank">eBay(Sold)</a>
+    </div>
+    <script>
+        const video = document.getElementById('video');
+        const status = document.getElementById('status');
+        const resultDisplay = document.getElementById('result-display');
+        const links = document.getElementById('links');
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then(stream => { video.srcObject = stream; status.innerText = "スキャン中..."; startScanning(); });
+        function startScanning() {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            setInterval(async () => {
+                canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
+                const match = text.match(/\d{3}\/\d{3}/);
+                if (match) {
+                    const cardNumber = match[0];
+                    resultDisplay.innerText = "認識成功: " + cardNumber;
+                    updateLinks(cardNumber);
+                }
+            }, 2500);
+        }
+        function updateLinks(num) {
+            const query = encodeURIComponent(num + " PSA10");
+            document.getElementById('link-mercari').href = `https://jp.mercari.com/search?keyword=${query}&status=sold_out`;
+            document.getElementById('link-snkrdunk').href = `https://snkrdunk.com/v1/trading-cards/search?keyword=${query}`;
+            document.getElementById('link-ebay').href = `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&LH_Complete=1`;
+            links.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
