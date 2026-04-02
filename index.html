@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ポケカ相場比較</title>
     <style>
+        /* 背景色をネイビーに変更（更新されたか確認用） */
         body { font-family: sans-serif; margin: 0; padding: 15px; background: #0f172a; color: white; text-align: center; }
         .container { max-width: 400px; margin: 0 auto; }
         
-        .input-group { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; }
+        .input-group { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 25px; }
         input { 
             width: 120px; padding: 12px 5px; font-size: 28px; font-weight: bold; 
             border-radius: 10px; border: 2px solid #334155; background: #000; 
@@ -16,18 +17,17 @@
         }
         .separator { font-size: 32px; font-weight: bold; color: #475569; }
 
-        .section-title { font-size: 14px; color: #94a3b8; text-align: left; margin: 15px 0 8px 5px; font-weight: bold; border-left: 3px solid #22c55e; padding-left: 8px; }
+        .section-title { font-size: 14px; color: #94a3b8; text-align: left; margin: 15px 0 8px 5px; font-weight: bold; border-left: 4px solid #22c55e; padding-left: 8px; }
         
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        /* ボタンを横に2つ並べる */
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .btn { 
-            padding: 16px 5px; font-size: 16px; font-weight: bold; color: white; 
-            border: none; border-radius: 10px; cursor: pointer; text-decoration: none;
+            padding: 18px 5px; font-size: 18px; font-weight: bold; color: white; 
+            border: none; border-radius: 12px; cursor: pointer; text-decoration: none;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 4px;
         }
         
-        /* アイコン風の文字ラベル */
-        .label-sub { font-size: 10px; opacity: 0.8; font-weight: normal; }
+        .label-sub { font-size: 11px; opacity: 0.9; margin-top: 4px; font-weight: normal; }
 
         /* メルカリ（赤系） */
         .m-psa { background: #ef4444; border-bottom: 4px solid #b91c1c; }
@@ -37,34 +37,35 @@
         .e-psa { background: #3b82f6; border-bottom: 4px solid #1d4ed8; }
         .e-raw { background: #60a5fa; border-bottom: 4px solid #2563eb; }
 
-        .reset-btn { margin-top: 25px; padding: 12px; font-size: 13px; color: #64748b; background: none; border: 1px solid #334155; border-radius: 8px; width: 100%; }
+        .reset-btn { margin-top: 30px; padding: 12px; font-size: 14px; color: #64748b; background: none; border: 1px solid #334155; border-radius: 8px; width: 100%; }
     </style>
 </head>
 <body>
     <div class="container">
+        <h2 style="font-size:16px; margin-bottom:15px; color:#22c55e;">カード番号を入力</h2>
         <div class="input-group">
-            <input type="text" id="left" placeholder="000" inputmode="numeric" autofocus>
+            <input type="text" id="left" placeholder="021" inputmode="numeric" autofocus>
             <span class="separator">/</span>
-            <input type="text" id="right" placeholder="000" inputmode="numeric">
+            <input type="text" id="right" placeholder="025" inputmode="numeric">
         </div>
 
         <div class="section-title">メルカリ (売り切れ)</div>
         <div class="btn-grid">
-            <button onclick="search('m', 'psa')" class="btn m-psa">✨ PSA10<span class="label-sub">鑑定品</span></button>
-            <button onclick="search('m', 'raw')" class="btn m-raw">🃏 素体<span class="label-sub">通常カード</span></button>
+            <button onclick="doSearch('m', 'psa')" class="btn m-psa">✨ PSA10<span class="label-sub">鑑定品</span></button>
+            <button onclick="doSearch('m', 'raw')" class="btn m-raw">🃏 素体<span class="label-sub">通常品</span></button>
         </div>
 
         <div class="section-title">eBay (Sold)</div>
         <div class="btn-grid">
-            <button onclick="search('e', 'psa')" class="btn e-psa">✨ PSA10<span class="label-sub">Graded</span></button>
-            <button onclick="search('e', 'raw')" class="btn e-raw">🃏 素体<span class="label-sub">Raw Card</span></button>
+            <button onclick="doSearch('e', 'psa')" class="btn e-psa">✨ PSA10<span class="label-sub">鑑定品</span></button>
+            <button onclick="doSearch('e', 'raw')" class="btn e-raw">🃏 素体<span class="label-sub">通常品</span></button>
         </div>
 
-        <button class="reset-btn" onclick="location.reload(true)">リセット</button>
+        <button class="reset-btn" onclick="location.reload(true)">画面をリセット</button>
     </div>
 
     <script>
-        function search(platform, mode) {
+        function doSearch(platform, mode) {
             const l = document.getElementById('left').value.trim();
             const r = document.getElementById('right').value.trim();
             if (!l || !r) { alert("番号を入力してください"); return; }
