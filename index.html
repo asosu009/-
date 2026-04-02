@@ -3,74 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ポケカ相場スキャナー</title>
+    <title>ポケカ相場比較</title>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 20px; background: #0f172a; color: white; text-align: center; }
+        body { font-family: sans-serif; margin: 0; padding: 15px; background: #0f172a; color: white; text-align: center; }
         .container { max-width: 400px; margin: 0 auto; }
-        .input-group { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 25px; }
+        
+        .input-group { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; }
         input { 
-            width: 125px; padding: 15px 5px; font-size: 32px; font-weight: bold; 
-            border-radius: 12px; border: 2px solid #334155; background: #000; 
+            width: 120px; padding: 12px 5px; font-size: 28px; font-weight: bold; 
+            border-radius: 10px; border: 2px solid #334155; background: #000; 
             color: #22c55e; text-align: center; box-sizing: border-box;
         }
-        .separator { font-size: 40px; font-weight: bold; color: #475569; }
-        .btn-group { display: grid; gap: 12px; }
+        .separator { font-size: 32px; font-weight: bold; color: #475569; }
+
+        .section-title { font-size: 14px; color: #94a3b8; text-align: left; margin: 15px 0 8px 5px; font-weight: bold; border-left: 3px solid #22c55e; padding-left: 8px; }
+        
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .btn { 
-            padding: 20px; font-size: 20px; font-weight: bold; color: white; 
-            border: none; border-radius: 12px; cursor: pointer; text-decoration: none;
-            display: flex; align-items: center; justify-content: center;
+            padding: 16px 5px; font-size: 16px; font-weight: bold; color: white; 
+            border: none; border-radius: 10px; cursor: pointer; text-decoration: none;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 4px;
         }
-        .mercari { background: #ef4444; }
-        .snkrdunk { background: #1e293b; border: 1px solid #475569; }
-        .ebay { background: #3b82f6; }
-        .reset-btn { margin-top: 30px; padding: 15px; font-size: 14px; color: #64748b; background: none; border: 1px solid #334155; border-radius: 8px; width: 100%; }
+        
+        /* アイコン風の文字ラベル */
+        .label-sub { font-size: 10px; opacity: 0.8; font-weight: normal; }
+
+        /* メルカリ（赤系） */
+        .m-psa { background: #ef4444; border-bottom: 4px solid #b91c1c; }
+        .m-raw { background: #f87171; border-bottom: 4px solid #dc2626; }
+
+        /* eBay（青系） */
+        .e-psa { background: #3b82f6; border-bottom: 4px solid #1d4ed8; }
+        .e-raw { background: #60a5fa; border-bottom: 4px solid #2563eb; }
+
+        .reset-btn { margin-top: 25px; padding: 12px; font-size: 13px; color: #64748b; background: none; border: 1px solid #334155; border-radius: 8px; width: 100%; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2 style="font-size:18px; margin-bottom:20px;">カード番号を入力</h2>
         <div class="input-group">
-            <input type="text" id="left" placeholder="021" inputmode="numeric" autofocus>
+            <input type="text" id="left" placeholder="000" inputmode="numeric" autofocus>
             <span class="separator">/</span>
-            <input type="text" id="right" placeholder="025" inputmode="numeric">
+            <input type="text" id="right" placeholder="000" inputmode="numeric">
         </div>
 
-        <div class="btn-group">
-            <button onclick="goSearch('m')" class="btn mercari">メルカリ（売切）</button>
-            <button onclick="goSearch('s')" class="btn snkrdunk">スニダン</button>
-            <button onclick="goSearch('e')" class="btn ebay">eBay（Sold）</button>
+        <div class="section-title">メルカリ (売り切れ)</div>
+        <div class="btn-grid">
+            <button onclick="search('m', 'psa')" class="btn m-psa">✨ PSA10<span class="label-sub">鑑定品</span></button>
+            <button onclick="search('m', 'raw')" class="btn m-raw">🃏 素体<span class="label-sub">通常カード</span></button>
+        </div>
+
+        <div class="section-title">eBay (Sold)</div>
+        <div class="btn-grid">
+            <button onclick="search('e', 'psa')" class="btn e-psa">✨ PSA10<span class="label-sub">Graded</span></button>
+            <button onclick="search('e', 'raw')" class="btn e-raw">🃏 素体<span class="label-sub">Raw Card</span></button>
         </div>
 
         <button class="reset-btn" onclick="location.reload(true)">リセット</button>
     </div>
 
     <script>
-        function goSearch(type) {
+        function search(platform, mode) {
             const l = document.getElementById('left').value.trim();
             const r = document.getElementById('right').value.trim();
-            
-            if (!l || !r) {
-                alert("番号を入力してください");
-                return;
-            }
+            if (!l || !r) { alert("番号を入力してください"); return; }
 
             const num = l + "/" + r;
-            let url = "";
+            const query = (mode === 'psa') ? num + " PSA10" : num;
+            const encoded = encodeURIComponent(query);
 
-            if (type === 'm') {
-                url = "https://jp.mercari.com/search?keyword=" + encodeURIComponent(num + " PSA10") + "&status=sold_out";
-            } else if (type === 's') {
-                // スニダンの検索URLを最も直接的な形に固定
-                url = "https://snkrdunk.com/search?keyword=" + encodeURIComponent(num);
-            } else if (type === 'e') {
-                url = "https://www.ebay.com/sch/i.html?_nkw=" + encodeURIComponent(num + " PSA10") + "&LH_Sold=1&LH_Complete=1";
-            }
+            let url = (platform === 'm') 
+                ? `https://jp.mercari.com/search?keyword=${encoded}&status=sold_out`
+                : `https://www.ebay.com/sch/i.html?_nkw=${encoded}&LH_Sold=1&LH_Complete=1`;
 
-            // 確実に新しいウィンドウで開く
             window.location.href = url;
         }
 
-        // 入力補助：左側が3桁になったら右へ
         document.getElementById('left').addEventListener('input', function() {
             if (this.value.length >= 3) document.getElementById('right').focus();
         });
