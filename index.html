@@ -3,36 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ポケカ相場スキャナー Zoom版</title>
+    <title>ポケカ相場スキャナー 最終版</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 20px; text-align: center; background: #1a1a1a; color: white; }
-        #video-container { position: relative; width: 100%; max-width: 400px; margin: 0 auto 10px; overflow: hidden; border-radius: 15px; border: 2px solid #444; }
-        #video { width: 100%; display: block; transform: scale(1.5); transform-origin: center; } /* 1.5倍ズーム */
-        #guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 50px; border: 3px solid #00ff00; border-radius: 8px; pointer-events: none; box-shadow: 0 0 15px rgba(0,255,0,0.5); }
-        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 18px; font-weight: bold; text-align: center; color: white; text-decoration: none; border-radius: 12px; }
+        body { font-family: sans-serif; margin: 0; padding: 0; text-align: center; background: #000; color: white; overflow: hidden; }
+        #video-container { position: relative; width: 100vw; height: 70vh; background: #000; display: flex; align-items: center; justify-content: center; }
+        #video { width: 100%; height: 100%; object-fit: cover; transform: scale(2.0); } /* 2倍ズームで離して撮る */
+        #guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 220px; height: 60px; border: 4px solid #00ff00; border-radius: 10px; box-shadow: 0 0 20px rgba(0,255,0,0.8); pointer-events: none; }
+        #result-box { height: 30vh; background: #1a1a1a; padding: 15px; box-sizing: border-box; }
+        #result-display { font-size: 24px; font-weight: bold; color: #0ff; margin-bottom: 10px; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .btn { flex: 1; min-width: 100px; padding: 12px 5px; font-size: 14px; font-weight: bold; color: white; text-decoration: none; border-radius: 8px; text-align: center; }
         .mercari { background: #ff0021; }
-        .snkrdunk { background: #000000; border: 1px solid #444; }
+        .snkrdunk { background: #000; border: 1px solid #555; }
         .ebay { background: #0064d2; }
-        #result-box { background: #333; padding: 15px; border-radius: 10px; margin-top: 10px; }
-        #result-display { font-size: 22px; font-weight: bold; color: #00ff00; }
-        .hint { font-size: 14px; color: #ffcc00; margin-bottom: 10px; }
+        .hint { font-size: 12px; color: #ffcc00; position: absolute; top: 10px; width: 100%; z-index: 10; }
     </style>
 </head>
 <body>
-    <h3>ポケカ相場スキャナー</h3>
-    <div class="hint">【コツ】20cmくらい離すとピントが合います！</div>
     <div id="video-container">
+        <div class="hint">【コツ】20〜30cm離して「右下の番号」を枠に入れてください</div>
         <video id="video" autoplay playsinline></video>
         <div id="guide"></div>
     </div>
 
     <div id="result-box">
-        <div id="result-display">緑の枠に番号を合わせる</div>
-        <div id="links" style="display:none; margin-top:15px;">
-            <a id="link-mercari" class="btn mercari" target="_blank">メルカリ(売切)</a>
+        <div id="result-display">番号スキャン待機中...</div>
+        <div id="links" style="display:none;" class="btn-group">
+            <a id="link-mercari" class="btn mercari" target="_blank">メルカリ</a>
             <a id="link-snkrdunk" class="btn snkrdunk" target="_blank">スニダン</a>
-            <a id="link-ebay" class="btn ebay" target="_blank">eBay(Sold)</a>
+            <a id="link-ebay" class="btn ebay" target="_blank">eBay</a>
         </div>
     </div>
 
@@ -41,6 +41,7 @@
         const resultDisplay = document.getElementById('result-display');
         const links = document.getElementById('links');
 
+        // カメラ設定
         navigator.mediaDevices.getUserMedia({ 
             video: { 
                 facingMode: "environment",
@@ -50,30 +51,31 @@
         })
         .then(stream => { video.srcObject = stream; startScanning(); });
 
-        function startScanning() {
+        async function startScanning() {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
 
             setInterval(async () => {
                 if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                    // ズームされている中央部分だけを切り取って認識させる
-                    canvas.width = 600;
-                    canvas.height = 300;
-                    const startX = (video.videoWidth - 600) / 2;
-                    const startY = (video.videoHeight - 300) / 2;
+                    // 2倍ズームに対応した中央切り出し
+                    canvas.width = 440;
+                    canvas.height = 120;
+                    const startX = (video.videoWidth - 440) / 2;
+                    const startY = (video.videoHeight - 120) / 2;
                     
-                    context.drawImage(video, startX, startY, 600, 300, 0, 0, 600, 300);
+                    context.drawImage(video, startX, startY, 440, 120, 0, 0, 440, 120);
                     
                     const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
                     const match = text.match(/\d{3}\/\d{3}/);
+                    
                     if (match) {
                         const cardNumber = match[0];
                         resultDisplay.innerText = "認識成功: " + cardNumber;
                         updateLinks(cardNumber);
-                        if (navigator.vibrate) navigator.vibrate(70);
+                        if (navigator.vibrate) navigator.vibrate(100);
                     }
                 }
-            }, 1500);
+            }, 1200); // 認識速度を少しアップ
         }
 
         function updateLinks(num) {
@@ -81,7 +83,7 @@
             document.getElementById('link-mercari').href = `https://jp.mercari.com/search?keyword=${query}&status=sold_out`;
             document.getElementById('link-snkrdunk').href = `https://snkrdunk.com/v1/trading-cards/search?keyword=${query}`;
             document.getElementById('link-ebay').href = `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&LH_Complete=1`;
-            links.style.display = 'block';
+            links.style.display = 'flex';
         }
     </script>
 </body>
