@@ -3,23 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ポケカ最速検索</title>
+    <title>ポケカ最速検索・完成版</title>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 20px; background: #121212; color: white; text-align: center; }
+        /* 背景色を少し変えて、更新されたか判別しやすくしました */
+        body { font-family: sans-serif; margin: 0; padding: 20px; background: #0f172a; color: white; text-align: center; }
         .container { max-width: 400px; margin: 0 auto; }
         .input-group { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 25px; }
         input { 
             width: 120px; padding: 15px 5px; font-size: 32px; font-weight: bold; 
-            border-radius: 12px; border: 2px solid #444; background: #000; 
-            color: #00ff00; text-align: center; box-sizing: border-box;
+            border-radius: 12px; border: 2px solid #334155; background: #000; 
+            color: #22c55e; text-align: center; box-sizing: border-box;
         }
-        .separator { font-size: 40px; font-weight: bold; color: #777; }
+        .separator { font-size: 40px; font-weight: bold; color: #475569; }
         .btn-group { display: grid; gap: 12px; }
         .btn { padding: 20px; font-size: 20px; font-weight: bold; color: white; text-decoration: none; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-        .mercari { background: #ff0021; }
-        .snkrdunk { background: #1d1d1d; border: 1px solid #444; }
-        .ebay { background: #0064d2; }
-        .reset-btn { margin-top: 30px; padding: 15px; font-size: 14px; color: #777; background: none; border: 1px solid #333; border-radius: 8px; width: 100%; }
+        .mercari { background: #ef4444; }
+        .snkrdunk { background: #1e293b; border: 1px solid #475569; }
+        .ebay { background: #3b82f6; }
+        .reset-btn { margin-top: 30px; padding: 15px; font-size: 14px; color: #64748b; background: none; border: 1px solid #334155; border-radius: 8px; width: 100%; }
     </style>
 </head>
 <body>
@@ -27,9 +28,9 @@
         <h2 style="font-size:18px; margin-bottom:20px;">番号を入力</h2>
         
         <div class="input-group">
-            <input type="text" id="left" placeholder="021" inputmode="numeric" autofocus>
+            <input type="text" id="left" placeholder="000" inputmode="numeric" autofocus>
             <span class="separator">/</span>
-            <input type="text" id="right" placeholder="025" inputmode="numeric">
+            <input type="text" id="right" placeholder="000" inputmode="numeric">
         </div>
 
         <div class="btn-group">
@@ -38,7 +39,7 @@
             <a id="link-e" href="#" class="btn ebay" target="_blank">eBay（Sold）</a>
         </div>
 
-        <button class="reset-btn" onclick="location.reload()">画面をリセット</button>
+        <button class="reset-btn" onclick="location.reload(true)">強制リロード</button>
     </div>
 
     <script>
@@ -52,14 +53,10 @@
             const lVal = left.value.trim();
             const rVal = right.value.trim();
             if (lVal && rVal) {
-                const cardNum = `${lVal}/${rVal}`;
-                const query = encodeURIComponent(cardNum + " PSA10");
-                
-                // メルカリ
+                const query = encodeURIComponent(`${lVal}/${rVal} PSA10`);
                 m.href = `https://jp.mercari.com/search?keyword=${query}&status=sold_out`;
-                // スニダン（404にならない新しい形式に修正）
+                // 404を回避する最新の検索用URL
                 s.href = `https://snkrdunk.com/search?keyword=${query}`;
-                // eBay
                 e.href = `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&LH_Complete=1`;
             }
         }
