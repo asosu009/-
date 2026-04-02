@@ -17,7 +17,7 @@
         .btn-group { display: grid; gap: 12px; }
         .btn { padding: 20px; font-size: 20px; font-weight: bold; color: white; text-decoration: none; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
         .mercari { background: #ff0021; }
-        .snkrdunk { background: #000; border: 1px solid #666; }
+        .snkrdunk { background: #1d1d1d; border: 1px solid #444; }
         .ebay { background: #0064d2; }
         .reset-btn { margin-top: 30px; padding: 15px; font-size: 14px; color: #777; background: none; border: 1px solid #333; border-radius: 8px; width: 100%; }
     </style>
@@ -55,10 +55,11 @@
                 const cardNum = `${lVal}/${rVal}`;
                 const query = encodeURIComponent(cardNum + " PSA10");
                 
-                // 各プラットフォームのリンク生成
+                // メルカリ
                 m.href = `https://jp.mercari.com/search?keyword=${query}&status=sold_out`;
-                // スニダンのURL形式を修正
+                // スニダン（404にならない新しい形式に修正）
                 s.href = `https://snkrdunk.com/search?keyword=${query}`;
+                // eBay
                 e.href = `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&LH_Complete=1`;
             }
         }
