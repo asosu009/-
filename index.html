@@ -3,74 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ポケカ相場スキャナー 決定版</title>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <title>ポケカ最速検索</title>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 0; text-align: center; background: #000; color: white; overflow: hidden; }
-        #video-container { position: relative; width: 100vw; height: 60vh; background: #000; display: flex; align-items: center; justify-content: center; }
-        /* 映像を3倍に拡大して、離れていても数字を巨大にする */
-        #video { width: 100%; height: 100%; object-fit: cover; transform: scale(3.0); }
-        #guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 240px; height: 70px; border: 4px solid #00ff00; border-radius: 10px; box-shadow: 0 0 30px rgba(0,255,0,0.8); pointer-events: none; z-index: 20; }
-        #result-box { height: 40vh; background: #1a1a1a; padding: 15px; box-sizing: border-box; border-top: 1px solid #444; }
-        #result-display { font-size: 24px; font-weight: bold; color: #0ff; margin-bottom: 10px; }
-        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
-        .btn { flex: 1; min-width: 90px; padding: 12px 2px; font-size: 13px; font-weight: bold; color: white; text-decoration: none; border-radius: 8px; text-align: center; }
+        body { font-family: sans-serif; margin: 0; padding: 20px; background: #121212; color: white; text-align: center; }
+        .container { max-width: 400px; margin: 0 auto; }
+        h2 { font-size: 18px; color: #aaa; margin-bottom: 20px; }
+        
+        /* 入力欄：数字キーボードを出しやすく設定 */
+        input { 
+            width: 100%; padding: 20px; font-size: 32px; font-weight: bold; 
+            border-radius: 12px; border: 2px solid #444; background: #000; 
+            color: #00ff00; text-align: center; box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        .btn-group { display: grid; gap: 12px; margin-top: 10px; }
+        .btn { 
+            padding: 20px; font-size: 20px; font-weight: bold; color: white; 
+            text-decoration: none; border-radius: 12px; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
         .mercari { background: #ff0021; }
-        .snkrdunk { background: #000; border: 1px solid #555; }
+        .snkrdunk { background: #000; border: 1px solid #666; }
         .ebay { background: #0064d2; }
-        .hint { font-size: 14px; color: #ffcc00; position: absolute; top: 10px; width: 100%; z-index: 30; text-shadow: 1px 1px 2px #000; }
+        
+        .reset-btn { 
+            margin-top: 30px; padding: 10px; font-size: 14px; color: #777; 
+            background: none; border: 1px solid #333; border-radius: 8px; width: 100%;
+        }
     </style>
 </head>
 <body>
-    <div id="video-container">
-        <div class="hint">30cm離して！右下の「数字/数字」を緑枠に大きく写す</div>
-        <video id="video" autoplay playsinline></video>
-        <div id="guide"></div>
-    </div>
-    <div id="result-box">
-        <div id="result-display">右下の番号を探しています...</div>
-        <div id="links" style="display:none;" class="btn-group">
-            <a id="link-mercari" class="btn mercari" target="_blank">メルカリ</a>
-            <a id="link-snkrdunk" class="btn snkrdunk" target="_blank">スニダン</a>
-            <a id="link-ebay" class="btn ebay" target="_blank">eBay</a>
-        </div>
-    </div>
-    <script>
-        const video = document.getElementById('video');
-        const resultDisplay = document.getElementById('result-display');
-        const links = document.getElementById('links');
-        navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } } 
-        }).then(stream => { video.srcObject = stream; startScanning(); });
+    <div class="container">
+        <h2>番号を入力してください</h2>
+        
+        <input type="text" id="cardNumber" placeholder="071/066" autofocus>
 
-        async function startScanning() {
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            setInterval(async () => {
-                if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                    // 中央のさらに狭い範囲を切り取って解析（認識率UP）
-                    canvas.width = 400; canvas.height = 100;
-                    const startX = (video.videoWidth - 400) / 2;
-                    const startY = (video.videoHeight - 100) / 2;
-                    context.drawImage(video, startX, startY, 400, 100, 0, 0, 400, 100);
-                    const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
-                    const match = text.match(/\d{3}\/\d{3}/);
-                    if (match) {
-                        const cardNumber = match[0];
-                        resultDisplay.innerText = "認識成功: " + cardNumber;
-                        updateLinks(cardNumber);
-                        if (navigator.vibrate) navigator.vibrate(100);
-                    }
-                }
-            }, 1000);
+        <div class="btn-group">
+            <a id="link-mercari" href="#" class="btn mercari" target="_blank">メルカリ（売り切れ）</a>
+            <a id="link-snkrdunk" href="#" class="btn snkrdunk" target="_blank">スニダン</a>
+            <a id="link-ebay" href="#" class="btn ebay" target="_blank">eBay（Sold）</a>
+        </div>
+
+        <button class="reset-btn" onclick="resetInput()">入力をクリア</button>
+    </div>
+
+    <script>
+        const input = document.getElementById('cardNumber');
+        const mLink = document.getElementById('link-mercari');
+        const sLink = document.getElementById('link-snkrdunk');
+        const eLink = document.getElementById('link-ebay');
+
+        function updateLinks() {
+            const val = input.value.trim();
+            if (val.length >= 3) {
+                // 自動で「PSA10」を付けて検索
+                const query = encodeURIComponent(val + " PSA10");
+                mLink.href = `https://jp.mercari.com/search?keyword=${query}&status=sold_out`;
+                sLink.href = `https://snkrdunk.com/v1/trading-cards/search?keyword=${query}`;
+                eLink.href = `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&LH_Complete=1`;
+            }
         }
-        function updateLinks(num) {
-            const query = encodeURIComponent(num + " PSA10");
-            document.getElementById('link-mercari').href = `https://jp.mercari.com/search?keyword=${query}&status=sold_out`;
-            document.getElementById('link-snkrdunk').href = `https://snkrdunk.com/v1/trading-cards/search?keyword=${query}`;
-            document.getElementById('link-ebay').href = `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&LH_Complete=1`;
-            links.style.display = 'flex';
+
+        function resetInput() {
+            input.value = "";
+            input.focus();
         }
+
+        // 入力のたびに即座に反映
+        input.addEventListener('input', updateLinks);
     </script>
 </body>
 </html>
