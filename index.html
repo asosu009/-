@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>ポケカ相場比較 PRO</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 15px; background: #0f172a; color: white; text-align: center; }
-        .container { max-width: 400px; margin: 0 auto; }
+        .container { max-width: 400px; margin: 0 auto; padding-top: 10px; }
         
         .input-group { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; }
         input { 
@@ -18,24 +20,19 @@
 
         .section-title { font-size: 14px; color: #94a3b8; text-align: left; margin: 15px 0 8px 5px; font-weight: bold; border-left: 4px solid #22c55e; padding-left: 8px; }
         
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        /* ボタンレイアウト：PSA10/9を横並び、素体を下に配置 */
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
         .btn { 
-            padding: 16px 5px; font-size: 17px; font-weight: bold; color: white; 
-            border: none; border-radius: 12px; cursor: pointer; text-decoration: none;
+            padding: 14px 5px; font-size: 16px; font-weight: bold; color: white; 
+            border: none; border-radius: 10px; cursor: pointer; text-decoration: none;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         
-        .label-sub { font-size: 10px; opacity: 0.9; margin-top: 3px; font-weight: normal; }
-
-        /* メルカリ（赤） */
         .m-btn { background: #ef4444; border-bottom: 4px solid #b91c1c; }
-        /* スニダン（黒） */
-        .s-btn { background: #1e293b; border: 1px solid #475569; border-bottom: 4px solid #0f172a; grid-column: span 2; }
-        /* eBay（青） */
         .e-btn { background: #3b82f6; border-bottom: 4px solid #1d4ed8; }
-
-        /* 素体用は少し明るく */
-        .raw { filter: brightness(1.2); }
+        
+        /* 素体ボタンは横幅いっぱい */
+        .full-btn { grid-column: span 2; filter: brightness(1.2); padding: 12px; font-size: 15px; }
 
         .reset-btn { margin-top: 25px; padding: 12px; font-size: 13px; color: #64748b; background: none; border: 1px solid #334155; border-radius: 8px; width: 100%; }
     </style>
@@ -48,21 +45,18 @@
             <input type="text" id="right" placeholder="025" inputmode="numeric">
         </div>
 
-        <div class="section-title">メルカリ (売り切れ)</div>
+        <div class="section-title">メルカリ (新着順・売り切れ)</div>
         <div class="btn-grid">
-            <button onclick="doSearch('m', 'psa')" class="btn m-btn">✨ PSA10</button>
-            <button onclick="doSearch('m', 'raw')" class="btn m-btn raw">🃏 素体</button>
+            <button onclick="doSearch('m', 'psa10')" class="btn m-btn">✨ PSA10</button>
+            <button onclick="doSearch('m', 'psa9')" class="btn m-btn">💎 PSA9</button>
+            <button onclick="doSearch('m', 'raw')" class="btn m-btn full-btn">🃏 素体 (通常品)</button>
         </div>
 
-        <div class="section-title">スニーカーダンク (検索)</div>
+        <div class="section-title">eBay (新着順・Sold)</div>
         <div class="btn-grid">
-            <button onclick="doSearch('s', 'raw')" class="btn s-btn">🔍 番号でスニダン検索</button>
-        </div>
-
-        <div class="section-title">eBay (Sold / Pokemon Card固定)</div>
-        <div class="btn-grid">
-            <button onclick="doSearch('e', 'psa')" class="btn e-btn">✨ PSA10</button>
-            <button onclick="doSearch('e', 'raw')" class="btn e-btn raw">🃏 素体</button>
+            <button onclick="doSearch('e', 'psa10')" class="btn e-btn">✨ PSA10</button>
+            <button onclick="doSearch('e', 'psa9')" class="btn e-btn">💎 PSA9</button>
+            <button onclick="doSearch('e', 'raw')" class="btn e-btn full-btn">🃏 素体 (Raw Card)</button>
         </div>
 
         <button class="reset-btn" onclick="location.reload(true)">画面をリセット</button>
@@ -75,19 +69,26 @@
             if (!l || !r) { alert("番号を入力してください"); return; }
 
             const num = l + "/" + r;
+            let query = "";
             let url = "";
 
             if (platform === 'm') {
-                const q = (mode === 'psa') ? num + " PSA10" : num;
-                url = `https://jp.mercari.com/search?keyword=${encodeURIComponent(q)}&status=sold_out`;
-            } 
-            else if (platform === 's') {
-                // スニダン：404を回避するため、公式の検索ディレクトリ形式を使用
-                url = `https://snkrdunk.com/search?keyword=${encodeURIComponent(num)}`;
+                // メルカリ検索用ワード
+                if (mode === 'psa10') query = num + " PSA10";
+                else if (mode === 'psa9') query = num + " PSA9";
+                else query = num;
+                
+                // &sort=created_time&order=desc で新しい順
+                url = `https://jp.mercari.com/search?keyword=${encodeURIComponent(query)}&status=sold_out&sort=created_time&order=desc`;
             } 
             else if (platform === 'e') {
-                const q = (mode === 'psa') ? "Pokemon Card " + num + " PSA10" : "Pokemon Card " + num;
-                url = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(q)}&LH_Sold=1&LH_Complete=1`;
+                // eBay検索用ワード（Pokemon Card固定）
+                if (mode === 'psa10') query = "Pokemon Card " + num + " PSA10";
+                else if (mode === 'psa9') query = "Pokemon Card " + num + " PSA9";
+                else query = "Pokemon Card " + num;
+                
+                // &LH_Sold=1&LH_Complete=1 で落札履歴、_sop=10 で新着順
+                url = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(query)}&LH_Sold=1&LH_Complete=1&_sop=10`;
             }
 
             window.location.href = url;
