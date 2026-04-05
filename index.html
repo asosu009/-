@@ -5,23 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>ポケカ相場比較 PRO</title>
+    <title>ポケカ検索 Pro</title>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 15px; background: #0f172a; color: white; text-align: center; }
-        .container { max-width: 400px; margin: 0 auto; padding-top: 10px; }
+        body { font-family: sans-serif; margin: 0; padding: 10px; background: #0f172a; color: white; text-align: center; }
+        .container { max-width: 400px; margin: 0 auto; }
         
-        .input-group { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; }
+        /* 入力エリアのスタイル */
+        .input-section { background: #1e293b; padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #334155; }
+        .label { font-size: 12px; color: #94a3b8; margin-bottom: 5px; display: block; text-align: left; }
+        
         input { 
-            width: 120px; padding: 12px 5px; font-size: 28px; font-weight: bold; 
-            border-radius: 10px; border: 2px solid #334155; background: #000; 
-            color: #22c55e; text-align: center; box-sizing: border-box;
+            width: 100%; padding: 12px; font-size: 20px; font-weight: bold; 
+            border-radius: 8px; border: 2px solid #334155; background: #000; 
+            color: #22c55e; text-align: center; box-sizing: border-box; margin-bottom: 10px;
         }
-        .separator { font-size: 32px; font-weight: bold; color: #475569; }
 
-        .section-title { font-size: 14px; color: #94a3b8; text-align: left; margin: 15px 0 8px 5px; font-weight: bold; border-left: 4px solid #22c55e; padding-left: 8px; }
+        /* 番号入力（横並び） */
+        .num-group { display: flex; align-items: center; gap: 5px; }
+        .num-input { font-size: 24px; }
+
+        .section-title { font-size: 13px; color: #94a3b8; text-align: left; margin: 10px 0 5px 5px; font-weight: bold; border-left: 4px solid #22c55e; padding-left: 8px; }
         
-        /* ボタンレイアウト：PSA10/9を横並び、素体を下に配置 */
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
         .btn { 
             padding: 14px 5px; font-size: 16px; font-weight: bold; color: white; 
             border: none; border-radius: 10px; cursor: pointer; text-decoration: none;
@@ -30,70 +35,91 @@
         
         .m-btn { background: #ef4444; border-bottom: 4px solid #b91c1c; }
         .e-btn { background: #3b82f6; border-bottom: 4px solid #1d4ed8; }
+        .s-btn { background: #1e293b; border: 1px solid #475569; border-bottom: 4px solid #000; grid-column: span 2; padding: 12px; }
         
-        /* 素体ボタンは横幅いっぱい */
-        .full-btn { grid-column: span 2; filter: brightness(1.2); padding: 12px; font-size: 15px; }
+        .full { grid-column: span 2; padding: 12px; filter: brightness(1.1); }
 
-        .reset-btn { margin-top: 25px; padding: 12px; font-size: 13px; color: #64748b; background: none; border: 1px solid #334155; border-radius: 8px; width: 100%; }
+        .reset-btn { margin-top: 15px; padding: 10px; font-size: 13px; color: #64748b; background: none; border: 1px solid #334155; border-radius: 8px; width: 100%; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="input-group">
-            <input type="text" id="left" placeholder="021" inputmode="numeric" autofocus>
-            <span class="separator">/</span>
-            <input type="text" id="right" placeholder="025" inputmode="numeric">
+        
+        <div class="input-section">
+            <span class="label">▼ ポケモン名・カード名</span>
+            <input type="text" id="name" placeholder="例：ピカチュウ" autofocus>
+            
+            <span class="label">▼ 番号 (数字のみ)</span>
+            <div class="num-group">
+                <input type="text" id="left" placeholder="000" class="num-input" inputmode="numeric">
+                <span style="color:#475569; font-size:24px;">/</span>
+                <input type="text" id="right" placeholder="000" class="num-input" inputmode="numeric">
+            </div>
         </div>
 
-        <div class="section-title">メルカリ (新着順・売り切れ)</div>
+        <div class="section-title">メルカリ (新着順)</div>
         <div class="btn-grid">
             <button onclick="doSearch('m', 'psa10')" class="btn m-btn">✨ PSA10</button>
             <button onclick="doSearch('m', 'psa9')" class="btn m-btn">💎 PSA9</button>
-            <button onclick="doSearch('m', 'raw')" class="btn m-btn full-btn">🃏 素体 (通常品)</button>
+            <button onclick="doSearch('m', 'raw')" class="btn m-btn full">🃏 素体 (通常品)</button>
         </div>
 
-        <div class="section-title">eBay (新着順・Sold)</div>
+        <div class="section-title">スニーカーダンク</div>
+        <div class="btn-grid">
+            <button onclick="doSearch('s', 'raw')" class="btn s-btn">🔍 スニダン検索</button>
+        </div>
+
+        <div class="section-title">eBay (Sold / 新着順)</div>
         <div class="btn-grid">
             <button onclick="doSearch('e', 'psa10')" class="btn e-btn">✨ PSA10</button>
             <button onclick="doSearch('e', 'psa9')" class="btn e-btn">💎 PSA9</button>
-            <button onclick="doSearch('e', 'raw')" class="btn e-btn full-btn">🃏 素体 (Raw Card)</button>
+            <button onclick="doSearch('e', 'raw')" class="btn e-btn full">🃏 素体 (Raw Card)</button>
         </div>
 
-        <button class="reset-btn" onclick="location.reload(true)">画面をリセット</button>
+        <button class="reset-btn" onclick="location.reload(true)">リセット</button>
     </div>
 
     <script>
         function doSearch(platform, mode) {
+            const nameVal = document.getElementById('name').value.trim();
             const l = document.getElementById('left').value.trim();
             const r = document.getElementById('right').value.trim();
-            if (!l || !r) { alert("番号を入力してください"); return; }
+            
+            if (!nameVal && !l) { alert("名前か番号を入力してください"); return; }
 
-            const num = l + "/" + r;
+            // 検索キーワードの組み立て
+            let baseQuery = "";
+            if (nameVal && l && r) {
+                baseQuery = `${nameVal} ${l}/${r}`;
+            } else if (l && r) {
+                baseQuery = `${l}/${r}`;
+            } else {
+                baseQuery = nameVal || l;
+            }
+
             let query = "";
             let url = "";
 
             if (platform === 'm') {
-                // メルカリ検索用ワード
-                if (mode === 'psa10') query = num + " PSA10";
-                else if (mode === 'psa9') query = num + " PSA9";
-                else query = num;
-                
-                // &sort=created_time&order=desc で新しい順
+                if (mode === 'psa10') query = baseQuery + " PSA10";
+                else if (mode === 'psa9') query = baseQuery + " PSA9";
+                else query = baseQuery;
                 url = `https://jp.mercari.com/search?keyword=${encodeURIComponent(query)}&status=sold_out&sort=created_time&order=desc`;
             } 
+            else if (platform === 's') {
+                url = `https://snkrdunk.com/search?keyword=${encodeURIComponent(baseQuery)}`;
+            }
             else if (platform === 'e') {
-                // eBay検索用ワード（Pokemon Card固定）
-                if (mode === 'psa10') query = "Pokemon Card " + num + " PSA10";
-                else if (mode === 'psa9') query = "Pokemon Card " + num + " PSA9";
-                else query = "Pokemon Card " + num;
-                
-                // &LH_Sold=1&LH_Complete=1 で落札履歴、_sop=10 で新着順
+                if (mode === 'psa10') query = "Pokemon Card " + baseQuery + " PSA10";
+                else if (mode === 'psa9') query = "Pokemon Card " + baseQuery + " PSA9";
+                else query = "Pokemon Card " + baseQuery;
                 url = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(query)}&LH_Sold=1&LH_Complete=1&_sop=10`;
             }
 
             window.location.href = url;
         }
 
+        // 番号入力の補助
         document.getElementById('left').addEventListener('input', function() {
             if (this.value.length >= 3) document.getElementById('right').focus();
         });
